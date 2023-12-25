@@ -109,7 +109,7 @@ class handleEmployee {
     // console.log(users);
 
     if (!users || users.length === 0) {
-      return next(new ErrorHandler("No users found.", 404)); // Change status code to 404 for "Not Found"
+      return next(new ErrorHandler("No users found.", 404));
     }
 
     const page = parseInt(req.query.page) - 1 || 0;
@@ -176,7 +176,7 @@ class handleEmployee {
     const user = await Employee.findById(id);
 
     if (!user) {
-      return next(new ErrorHandler("No user found.", 404)); // Change status code to 404 for "Not Found"
+      return next(new ErrorHandler("No user found.", 404));
     }
 
     res.status(200).json({ success: true, user });
@@ -231,7 +231,7 @@ class handleEmployee {
       }
 
       res.status(200).json({ success: true, user: updatedUser });
-      return; // Make sure to exit the function after sending the response
+      return;
     }
 
     // Only update the user with newData if newData is defined
@@ -289,7 +289,6 @@ class handleEmployee {
     res
       .cookie("token", "", {
         expires: new Date(0), // Set the expiration date to remove the cookie
-        httpOnly: true,
       })
       .status(200)
       .json({ success: true, message: "User logout successful" });

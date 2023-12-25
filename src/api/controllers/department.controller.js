@@ -45,7 +45,7 @@ class handleDepartment {
 
     if (!docs || docs.length === 0) {
       // Check if docs is empty
-      return next(new ErrorHandler("No documents found.", 404)); // Use a 404 status code for "Not Found"
+      return next(new ErrorHandler("No documents found.", 404));
     }
 
     res.status(200).json({ success: true, docs });
@@ -58,10 +58,10 @@ class handleDepartment {
       return next(new ErrorHandler("Id is not found.", 400));
     }
 
-    const doc = await Department.findById(id); // Use findById for searching by _id
+    const doc = await Department.findById(id);
 
     if (!doc) {
-      return next(new ErrorHandler("No department found.", 404)); // Change status code to 404 for "Not Found"
+      return next(new ErrorHandler("No department found.", 404));
     }
 
     res.status(200).json({ success: true, doc });
@@ -80,7 +80,7 @@ class handleDepartment {
     });
 
     if (!updatedDepartment) {
-      return next(new ErrorHandler("No department found.", 404)); // Change status code to 404 for "Not Found"
+      return next(new ErrorHandler("No department found.", 404));
     }
 
     res.status(200).json({ success: true, department: updatedDepartment });
@@ -96,7 +96,7 @@ class handleDepartment {
     const deletedDepartment = await Department.findByIdAndDelete(id);
 
     if (!deletedDepartment) {
-      return next(new ErrorHandler("No department found.", 404)); // Change status code to 404 for "Not Found"
+      return next(new ErrorHandler("No department found.", 404));
     }
 
     res.status(200).json({ success: true, department: deletedDepartment });
