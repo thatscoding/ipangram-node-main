@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./db.js";
-import employeeRoute from "../api/routes/employee.route.js";
-import departmentRoute from "../api/routes/department.route.js";
-import errorMiddleware from "../api/middlewares/error.js";
+import employeeRoute from "../api/v1/routes/employee.route.js";
+import departmentRoute from "../api/v1/routes/department.route.js";
+import errorMiddleware from "../api/v1/middlewares/error.js";
 
 dotenv.config();
 

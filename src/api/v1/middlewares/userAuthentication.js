@@ -8,7 +8,7 @@ export const isUserAuthenticate = catchAsyncError(async (req, res, next) => {
   const authorizationHeader = req.headers["authorization"];
 
   if (!authorizationHeader) {
-    return res.status(401).json({ error: "Authorization header missing" });
+    return next(new ErrorHandler("Authorization header missing", 401));
   }
 
   const token = authorizationHeader.split(" ")[1];

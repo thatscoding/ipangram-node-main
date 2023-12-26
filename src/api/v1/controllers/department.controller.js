@@ -12,7 +12,7 @@ class handleDepartment {
 
     if (existingDepartment) {
       if (employee) {
-        existingDepartment.employees.push(employee);
+        await existingDepartment.employees.push(employee);
         await existingDepartment.save();
 
         return res
@@ -20,14 +20,13 @@ class handleDepartment {
           .json({ success: true, message: "Successfully updated." });
       }
     } else {
-      const newDepartment = new Department({
+      let newDepartment = await Department.create({
         name: name,
       });
 
       if (employee) {
-        newDepartment.employees.push(employee);
+        await newDepartment.employees.push(employee);
       }
-
       await newDepartment.save();
 
       return res
@@ -69,10 +68,14 @@ class handleDepartment {
 
   static updateDepartment = catchAsyncError(async (req, res, next) => {
     const { id } = req.params;
-    console.log("working");
+    const { name } = req.body;
+    // console.log("working");
 
     if (!id) {
       return next(new ErrorHandler("Id is not found.", 400));
+    }
+    if (!name) {
+      return next(new ErrorHandler("Data is required", 400));
     }
 
     const updatedDepartment = await Department.findByIdAndUpdate(id, req.body, {
@@ -93,13 +96,23 @@ class handleDepartment {
       return next(new ErrorHandler("Id is not found.", 400));
     }
 
-    const deletedDepartment = await Department.findByIdAndDelete(id);
+    const docs = await Department.find({});
 
-    if (!deletedDepartment) {
-      return next(new ErrorHandler("No department found.", 404));
+    if (docs && docs.length === 0) {
+      const deletedDepartment = await Department.findByIdAndDelete(id);
+
+      if (!deletedDepartment) {
+        return next(new ErrorHandler("No department found.", 404));
+      }
+
+      return res
+        .status(200)
+        .json({ success: true, department: deletedDepartment });
     }
 
-    res.status(200).json({ success: true, department: deletedDepartment });
+    return next(
+      new ErrorHandler("Error! there is employees in departments", 401)
+    );
   });
 }
 

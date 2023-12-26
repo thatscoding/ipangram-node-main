@@ -9,15 +9,17 @@ router.route("/register").post(handleEmployee.register);
 router.route("/login").post(handleEmployee.login);
 router
   .route("/profile")
-  .get(isUserAuthenticate, isUserAuthorize, handleEmployee.profile);
-router.route("/logout").get(isUserAuthenticate, handleEmployee.logout);
+  .get(isUserAuthenticate, isUserAuthenticate, handleEmployee.profile);
+router
+  .route("/logout")
+  .get(isUserAuthenticate, isUserAuthenticate, handleEmployee.logout);
 
 router.route("/all").get(handleEmployee.allEmployees);
 
 router
   .route("/:id")
-  .patch(isUserAuthenticate, handleEmployee.updateEmployee)
-  .delete(isUserAuthenticate, handleEmployee.deleteEmployee)
+  .patch(isUserAuthenticate, isUserAuthenticate, handleEmployee.updateEmployee)
+  .delete(isUserAuthenticate, isUserAuthorize, handleEmployee.deleteEmployee)
   .get(isUserAuthenticate, handleEmployee.employeeById);
 
 export default router;

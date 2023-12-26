@@ -5,9 +5,11 @@ import handleDepartment from "../controllers/department.controller.js";
 
 const router = express.Router();
 
-router.route("/register").post(handleDepartment.register);
+router
+  .route("/register")
+  .post(isUserAuthenticate, isUserAuthorize, handleDepartment.register);
 
-router.route("/all").get(handleDepartment.allDepartments);
+router.route("/all").get(isUserAuthenticate, handleDepartment.allDepartments);
 
 router
   .route("/:id")
