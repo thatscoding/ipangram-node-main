@@ -8,8 +8,9 @@ import handleDepartment from "./department.controller.js";
 
 class handleEmployee {
   static register = catchAsyncError(async (req, res, next) => {
-    const { name, age, mobileNumber, email, password, location, department } =
-      req.body;
+    const { name, age, mobileNumber, email, password, location } = req.body;
+
+    let department = req.body.department ? req.body.department : "new";
 
     if (
       !name ||
@@ -29,33 +30,62 @@ class handleEmployee {
       return next(new ErrorHandler("Email Already Registered.", 409));
     }
 
-    const hashPassword = await generatePassword(password);
-
-    const newEmployee = new Employee({
-      name,
-      age,
-      mobileNumber,
-      email,
-      location,
-      department,
-      password: hashPassword,
-    });
-
-    await newEmployee.save();
-
-    const doc2 = await Employee.findOne({ email });
-
-    let existingDepartment = await Department.findOne({ name: "new" });
-    console.log(existingDepartment);
+    const existingDepartment = await Department.findOne({ name: "new" });
 
     if (existingDepartment) {
-      existingDepartment.employees.push(doc2._id);
-      await existingDepartment.save();
-    }
+      const hashPassword = await generatePassword(password);
 
-    res
-      .status(201)
-      .json({ success: true, message: "Successfully registered." });
+      const newEmployee = new Employee({
+        name,
+        age,
+        mobileNumber,
+        email,
+        location,
+        department: existingDepartment._id,
+        password: hashPassword,
+      });
+
+      await newEmployee.save();
+      const doc2 = await Employee.findOne({ email });
+
+      await existingDepartment.employees.push(doc2._id);
+      await existingDepartment.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Successfully registered.",
+        user: newEmployee,
+      });
+    } else {
+      const newDept = await Department.create({ name: "new" });
+      await newDept.save();
+
+      const dept2 = await Department.findOne({ name: "new" });
+      const hashPassword = await generatePassword(password);
+
+      const newEmployee = new Employee({
+        name,
+        age,
+        mobileNumber,
+        email,
+        location,
+        department: dept2._id,
+        password: hashPassword,
+      });
+
+      await newEmployee.save();
+
+      const newEmp = await Employee.findOne({ email });
+
+      await dept2.employees.push(newEmp._id);
+      await dept2.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Successfully registered.",
+        user: newEmployee,
+      });
+    }
   });
 
   static login = catchAsyncError(async (req, res, next) => {
@@ -115,7 +145,7 @@ class handleEmployee {
     const page = parseInt(req.query.page) - 1 || 0;
     const limit = parseInt(req.query.limit) || 5;
     const search = req.query.search || "";
-    let sort = req.query.sort || "rating";
+    let sort = req.query.sort || "order";
     let location = req.query.location || "All";
 
     const result = await Employee.aggregate([{ $group: { _id: "$location" } }]);
@@ -189,63 +219,53 @@ class handleEmployee {
       return next(new ErrorHandler("Id is not found.", 400));
     }
 
-    let updatedUser;
-    let newData;
-    const doc = await Employee.findOne({ email: req.body.email });
+    // let updatedUser;
+    let newData = req.body;
+    const prevUser = await Employee.findOne({ _id: id });
 
     if (req.body.password) {
       const hashPassword = await generatePassword(req.body.password);
       newData = { ...req.body, password: hashPassword };
-    } else if (req.body.department) {
+    }
+    if (req.body.department && req.body.department !== prevUser.department) {
       // remove from the previous department
-      if (doc && doc.department) {
-        let pulloutempyfromcat = await Department.findOne({
-          _id: doc.department,
-        });
+      let prevDept = await Department.findOne({
+        _id: prevUser.department,
+      });
+      console.log("prevDept", prevDept);
 
-        if (pulloutempyfromcat) {
-          pulloutempyfromcat.employees.pull(doc._id);
-          await pulloutempyfromcat.save();
-        }
+      if (prevDept) {
+        await prevDept.employees.pull(id);
+        await prevDept.save();
       }
 
-      // employee join new department
-      let newDepartment = await Department.findOne({
+      const addEmpToNewDept = await Department.findOne({
         _id: req.body.department,
       });
-      if (newDepartment) {
-        newDepartment.employees.push(doc._id);
-        await newDepartment.save();
+      if (addEmpToNewDept) {
+        await addEmpToNewDept.employees.push(id);
+        await addEmpToNewDept.save();
       }
-
-      newData = { ...req.body, department: req.body.department };
-    } else {
-      const { password, ...nData } = req.body;
-
-      updatedUser = await Employee.findByIdAndUpdate(id, nData, {
-        new: true,
-      });
-
-      if (!updatedUser) {
-        return next(new ErrorHandler("No user found.", 404));
-      }
-
-      res.status(200).json({ success: true, user: updatedUser });
-      return;
     }
 
-    // Only update the user with newData if newData is defined
-    if (newData) {
-      updatedUser = await Employee.findByIdAndUpdate(id, newData, {
+    console.log("id", id);
+    console.log("data", newData);
+
+    const updatedUser = await Employee.findOneAndUpdate(
+      { _id: id },
+      { $set: newData },
+      {
         new: true,
-      });
-
-      if (!updatedUser) {
-        return next(new ErrorHandler("No user found.", 404));
       }
+    );
 
-      res.status(200).json({ success: true, user: updatedUser });
+    if (!updatedUser) {
+      return next(new ErrorHandler("No user found.", 404));
     }
+
+    res
+      .status(200)
+      .json({ success: true, user: updatedUser, prevData: newData });
   });
 
   static deleteEmployee = catchAsyncError(async (req, res, next) => {
@@ -264,11 +284,11 @@ class handleEmployee {
     const deptDoc = await Department.findById(user.department);
 
     if (!deptDoc) {
-      return next(new ErrorHandler("Department not found.", 404));
+      return next(new ErrorHandler("Department not found.", 401));
     }
 
     // Remove employee from the department
-    deptDoc.employees.pull(user._id);
+    await deptDoc.employees.pull(user._id);
     await deptDoc.save();
 
     // Delete the employee
