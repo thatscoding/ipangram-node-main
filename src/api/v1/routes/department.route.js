@@ -13,8 +13,12 @@ router.route("/all").get(isUserAuthenticate, handleDepartment.allDepartments);
 
 router
   .route("/:id")
-  .patch(isUserAuthenticate, handleDepartment.updateDepartment)
-  .delete(isUserAuthenticate, handleDepartment.deleteDepartment)
+  .patch(isUserAuthenticate, isUserAuthorize, handleDepartment.updateDepartment)
+  .delete(
+    isUserAuthenticate,
+    isUserAuthorize,
+    handleDepartment.deleteDepartment
+  )
   .get(isUserAuthenticate, handleDepartment.departmentById);
 
 export default router;

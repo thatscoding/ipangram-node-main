@@ -18,6 +18,10 @@ class handleDepartment {
         return res
           .status(200)
           .json({ success: true, message: "Successfully updated." });
+      } else {
+        return res
+          .status(401)
+          .json({ success: false, message: "Name is already Exist." });
       }
     } else {
       let newDepartment = await Department.create({
@@ -111,7 +115,10 @@ class handleDepartment {
     }
 
     return next(
-      new ErrorHandler("Error! there is employees in departments", 401)
+      new ErrorHandler(
+        "Error! To delete Department; Employees should be 0.",
+        401
+      )
     );
   });
 }

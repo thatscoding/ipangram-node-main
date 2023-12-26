@@ -226,6 +226,9 @@ class handleEmployee {
     if (req.body.password) {
       const hashPassword = await generatePassword(req.body.password);
       newData = { ...req.body, password: hashPassword };
+    } else {
+      let { password, ...temp } = req.body;
+      newData = { ...temp };
     }
     if (req.body.department && req.body.department !== prevUser.department) {
       // remove from the previous department
@@ -273,6 +276,9 @@ class handleEmployee {
 
     if (!id) {
       return next(new ErrorHandler("Id is not found.", 400));
+    }
+    if (id === "658ae06016a113f1c89d9f60") {
+      return next(new ErrorHandler("Admin never be deleted.", 400));
     }
 
     const user = await Employee.findById(id);
