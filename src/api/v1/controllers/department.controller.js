@@ -100,9 +100,14 @@ class handleDepartment {
       return next(new ErrorHandler("Id is not found.", 400));
     }
 
-    const docs = await Department.find({});
+    const doc = await Department.findOne({ _id: id });
 
-    if (docs && docs.length === 0) {
+    if (doc.name === "manager") {
+      return next(new ErrorHandler("Manger can't be Deleted.", 401));
+    }
+
+    if (doc.employees.length === 0) {
+      console.log("djflakjdfl");
       const deletedDepartment = await Department.findByIdAndDelete(id);
 
       if (!deletedDepartment) {
