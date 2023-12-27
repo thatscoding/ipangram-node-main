@@ -135,10 +135,10 @@ class handleEmployee {
   });
 
   static allEmployees = catchAsyncError(async (req, res, next) => {
-    const users = await Employee.find();
+    const usersData = await Employee.find();
     // console.log(users);
 
-    if (!users || users.length === 0) {
+    if (!usersData || usersData.length === 0) {
       return next(new ErrorHandler("No users found.", 404));
     }
 
@@ -170,7 +170,7 @@ class handleEmployee {
       sortBy[sort[0]] = "asc";
     }
 
-    const user = await Employee.find({
+    const users = await Employee.find({
       name: { $regex: search, $options: "i" },
     })
       .where("location")
@@ -190,7 +190,7 @@ class handleEmployee {
       page: page + 1,
       limit,
       locations: locationOptions,
-      user,
+      users,
     };
 
     res.status(200).json({ success: true, response });
